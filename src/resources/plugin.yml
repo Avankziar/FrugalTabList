@@ -1,10 +1,10 @@
-name: BaseTemplate
-main: main.java.me.avankziar.base.spigot.BM
+name: FrugalTabList
+main: me.avankziar.ftl.spigot.FTL
 version: 1
 author: Avankziar
-api-version: 1.17
-description: A Template
+api-version: 1.19
+description: A Tablist for Velocity
 depend: [InterfaceHub]
-softdepend: [RootAdministration]
+softdepend: [PlaceHolderApi]
 website: TBA
-prefix: BM
+prefix: FTL
