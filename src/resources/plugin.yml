@@ -1,0 +1,10 @@
+name: BaseTemplate
+main: main.java.me.avankziar.base.spigot.BM
+version: 1
+author: Avankziar
+api-version: 1.17
+description: A Template
+depend: [InterfaceHub]
+softdepend: [RootAdministration]
+website: TBA
+prefix: BM
