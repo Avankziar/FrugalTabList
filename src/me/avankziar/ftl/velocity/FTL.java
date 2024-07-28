@@ -19,9 +19,6 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 
-import main.java.me.avankziar.ifh.velocity.IFH;
-import main.java.me.avankziar.ifh.velocity.administration.Administration;
-import main.java.me.avankziar.ifh.velocity.plugin.RegisteredServiceProvider;
 import me.avankziar.ftl.general.database.YamlHandler;
 import me.avankziar.ftl.general.database.YamlManager;
 import me.avankziar.ftl.velocity.assistance.BackgroundTask;
@@ -29,6 +26,9 @@ import me.avankziar.ftl.velocity.handler.TabListHandler;
 import me.avankziar.ftl.velocity.listener.JoinLeaveSwitchListener;
 import me.avankziar.ftl.velocity.listener.ServerListener;
 import me.avankziar.ftl.velocity.metric.Metrics;
+import me.avankziar.ifh.velocity.IFH;
+import me.avankziar.ifh.velocity.administration.Administration;
+import me.avankziar.ifh.velocity.plugin.RegisteredServiceProvider;
 
 @Plugin(
 	id = "frugaltablist",
@@ -152,7 +152,7 @@ public class FTL
         	logger.info(pluginname + " dont find InterfaceHub!");
             return;
         }
-        main.java.me.avankziar.ifh.velocity.IFH ifh = IFH.getPlugin();
+        me.avankziar.ifh.velocity.IFH ifh = IFH.getPlugin();
         RegisteredServiceProvider<Administration> rsp = ifh
         		.getServicesManager()
         		.getRegistration(Administration.class);
