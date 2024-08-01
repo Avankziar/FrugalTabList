@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import me.avankziar.ftl.general.database.Language.ISO639_2B;
+import me.avankziar.ftl.velocity.handler.TabListHandler;
 
 public class YamlManager
 {	
@@ -497,10 +498,21 @@ public class YamlManager
 				"",
 				"",
 				""});
-		
-		configKeys.put("default.LoopTime", new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+		addConfig("default.SortingType",
+				new Object[] {
+				TabListHandler.SortingType.ALPHABETICAL_ASC.toString()},
+				new Object[] {
 				"",
-				""}));
+				"Der SortierungsType der Tabliste. Es existieren Folgende Type:",
+				"ALPHABETICAL_ASC, für eine aufsteigende Alphabetische Reihenfolge. Bspw. A dann B dann C und so weiter.",
+				"ALPHABETICAL_DESC, für eine absteigende Alphabetische Reihenfolge. Bspw. Z dann Y dann X und so weiter.",
+				"PERMISSION_GROUP_WEIGHT_ASC, für eine aufsteigen Permission Gruppe Gewicht Reihenfolge. Bswp. 0 dann 1 dann 2.",
+				"PERMISSION_GROUP_WEIGHT_DESC, für eine absteigen Permission Gruppe Gewicht Reihenfolge. Bswp. 2 dann 1 dann 0.",
+				"	PERMISSION_GROUP_WEIGHT_X Benötigt ein Permissionsystem (Momentan nur LuckPerms wird unterstützt.)",
+				"	Sollten Spieler die gleiche Gruppengewicht (aka den Gleichen Rang) haben werden sie Alphabetisch aufsteigen nachfolgen sortiert.",
+				"",
+				"",
+				""});
 		addConfig("default.AnimationTime",
 				new Object[] {
 				200L},
@@ -515,8 +527,8 @@ public class YamlManager
 				""});
 		addConfig("default.Header",
 				new Object[] {
-				"",
-				""},
+				"<aqua>Welcome <white>%player_name%<newline><gray>It is %time%.",
+				"<aqua>Welcome <white>%player_name%<newline><gray>It is %times%."},
 				new Object[] {
 				"",
 				"Der Header oder auch Kopfzeile, bestimmt die obersten Zeilen in der Tabliste.",
@@ -532,8 +544,12 @@ public class YamlManager
 				""});
 		addConfig("default.Footer",
 				new Object[] {
-				"",
-				""},
+				"<red>Client: <white>%player_clientbrand% <blue>| <red>Ping: <white>%player_ping% <blue>| <red>TotalPlayers: <white>%players_online%<newline>"
+				+ "<red>CurrentServer: <white>%player_currentserver% <blue>| <red>CurrentWorld: <white>%player_currentworld%<newline>"
+				+ "<rainbow:1>||||||||||||||||||||||||</rainbow>",
+				"<red>Client: <white>%player_clientbrand% <blue>| <red>Ping: <white>%player_ping% <blue>| <red>TotalPlayers: <white>%players_online%<newline>"
+				+ "<red>CurrentServer: <white>%player_currentserver% <blue>| <red>CurrentWorld: <white>%player_currentworld%<newline>"
+				+ "<rainbow:2>||||||||||||||||||||||||</rainbow>"},
 				new Object[] {
 				"",
 				"Der Footer oder auch Fußzeile, bestimmt die unterste Zeilen in der Tabliste.",
@@ -563,6 +579,18 @@ public class YamlManager
 				"",
 				"",
 				""});
+		configKeys.put("default.SortingType", new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+						TabListHandler.SortingType.ALPHABETICAL_ASC.toString()}));
+		configKeys.put("default.AnimationTime", new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				200L}));
+		configKeys.put("default.Header", new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"",
+				""}));
+		configKeys.put("default.Footer", new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"",
+				""}));
+		configKeys.put("default.PlayerEntry", new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"<gray>[<reset>%player_luckperm_primaryrole_display_name%<gray>] %player_luckperm_primaryrole_display_color%%playername%"}));
 	}
 	
 	@SuppressWarnings("unused") //INFO:Commands

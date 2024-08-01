@@ -31,7 +31,7 @@ public class ChatApi
 		}
 	}
 	
-	private static String oldBukkitFormat(String s)
+	public static String oldBukkitFormat(String s)
 	{
 		StringBuilder b = new StringBuilder();
 		for(int i = 0; i < s.length(); i++)

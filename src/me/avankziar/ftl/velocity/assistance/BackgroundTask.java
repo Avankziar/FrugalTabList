@@ -7,10 +7,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.velocitypowered.api.proxy.Player;
 
+import me.avankziar.ftl.general.assistance.ChatApi;
 import me.avankziar.ftl.general.assistance.StaticValues;
+import me.avankziar.ftl.general.assistance.TimeHandler;
 import me.avankziar.ftl.velocity.FTL;
 import me.avankziar.ftl.velocity.handler.TabListHandler;
 import net.luckperms.api.LuckPerms;
@@ -45,12 +48,13 @@ public class BackgroundTask
 		ArrayList<String> toSend = new ArrayList<>();
 		for(Entry<String, String> entry : map.entrySet())
 		{
-			if(entry.getKey().contains(":"))
+			String s = resolveInternReplacer(player, entry.getKey());
+			if(s != null)
 			{
-				toSend.add(entry.getKey());
+				entry.setValue(s);
 			} else
 			{
-				entry.setValue(resolveInternReplacer(player, entry.getKey()));
+				toSend.add(entry.getKey());
 			}
 		}
 		sendToResolveReplacer(player, toSend);
@@ -83,7 +87,11 @@ public class BackgroundTask
 		switch(s)
 		{
 		default:
-			return "";
+			break;
+		case "%time%": return TimeHandler.getDateTime(System.currentTimeMillis(), "HH:mm");
+		case "%times%": return TimeHandler.getDateTime(System.currentTimeMillis(), "HH:mm:ss");
+		case "%date%": return TimeHandler.getDateTime(System.currentTimeMillis(), "dd.MM");
+		case "%dates%": return TimeHandler.getDateTime(System.currentTimeMillis(), "dd.MM.yyyy");
 		case "%player_username%": return player.getUsername();
 		case "%player_username_lower%": return player.getUsername().toLowerCase();
 		case "%player_uuid%": return player.getUniqueId().toString();
@@ -91,8 +99,11 @@ public class BackgroundTask
 		case "%player_clientbrand%": return player.getClientBrand();
 		case "%player_ping%": return String.valueOf(player.getPing());
 		case "%players_online%": return String.valueOf(FTL.getPlugin().getServer().getAllPlayers().size());
-		case "%servers%": return String.valueOf(FTL.getPlugin().getServer().getAllServers().size());
-		case "%player_luckperm_prefix%":
+		case "%players_online_currentserver%": return String.valueOf(FTL.getPlugin().getServer().getAllPlayers().stream()
+					.filter(x -> x.getCurrentServer().get().getServerInfo().getName().equals(player.getCurrentServer().get().getServerInfo().getName()))
+					.collect(Collectors.toList()).size());
+		case "%server_amount%": return String.valueOf(FTL.getPlugin().getServer().getAllServers().size());
+		case "%player_permission_prefix%":
 			try
 			{
 				LuckPerms api = LuckPermsProvider.get();
@@ -100,9 +111,9 @@ public class BackgroundTask
 				return user.getCachedData().getMetaData().getPrefix();
 			} catch(Exception e)
 			{
-				return "";
+				break;
 			}
-		case "%player_luckperm_suffix%":
+		case "%player_permission_suffix%":
 			try
 			{
 				LuckPerms api = LuckPermsProvider.get();
@@ -110,9 +121,9 @@ public class BackgroundTask
 				return user.getCachedData().getMetaData().getSuffix();
 			} catch(Exception e)
 			{
-				return "";
+				break;
 			}
-		case "%player_luckperm_primaryrole%":	
+		case "%player_permission_primaryrole%":	
 			try
 			{
 				LuckPerms api = LuckPermsProvider.get();
@@ -120,9 +131,9 @@ public class BackgroundTask
 				return user.getPrimaryGroup();
 			} catch(Exception e)
 			{
-				return "";
+				break;
 			}
-		case "%player_luckperm_primaryrole_display_name%":
+		case "%player_permission_primaryrole_display_name%":
 			try
 			{
 				LuckPerms api = LuckPermsProvider.get();
@@ -131,20 +142,20 @@ public class BackgroundTask
 				return group.getDisplayName();
 			} catch(Exception e)
 			{
-				return "";
+				break;
 			}
-		case "%player_luckperm_primaryrole_display_color%":
+		case "%player_permission_primaryrole_display_color%":
 			try
 			{
 				LuckPerms api = LuckPermsProvider.get();
 				User user = api.getPlayerAdapter(Player.class).getUser(player);
 				Group group = api.getGroupManager().getGroup(user.getPrimaryGroup());
-				return group.getDisplayName().replace(user.getPrimaryGroup(), "");
+				return ChatApi.oldBukkitFormat(group.getDisplayName().replace(user.getPrimaryGroup(), ""));
 			} catch(Exception e)
 			{
-				return "";
+				break;
 			}
-		case "%player_luckperm_primaryrole_weight%":
+		case "%player_permission_primaryrole_weight%":
 			try
 			{
 				LuckPerms api = LuckPermsProvider.get();
@@ -153,8 +164,9 @@ public class BackgroundTask
 				return String.valueOf(group.getWeight());
 			} catch(Exception e)
 			{
-				return "";
+				break;
 			}
 		}
+		return null;
 	}
 }

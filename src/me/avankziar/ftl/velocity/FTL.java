@@ -74,12 +74,12 @@ public class FTL
         List<String> dependencies = new ArrayList<>();
         pd.getDependencies().stream().allMatch(x -> dependencies.add(x.getId()));
         //https://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=FTL
-		logger.info("  | Id: "+pd.getId());
-		logger.info("  | Version: "+pd.getVersion().get());
-		logger.info("  | Author: ["+String.join(", ", pd.getAuthors())+"]");
-		logger.info("  | Description: "+(pd.getDescription().isPresent() ? pd.getDescription().get() : "/"));
-		logger.info("  | Plugin Website:"+pd.getUrl().toString());
-		logger.info("  | Dependencies Plugins: ["+String.join(", ", dependencies)+"]");
+		logger.info(" ███████╗████████╗██╗      | Id: "+pd.getId());
+		logger.info(" ██╔════╝╚══██╔══╝██║      | Version: "+pd.getVersion().get());
+		logger.info(" █████╗     ██║   ██║      | Author: ["+String.join(", ", pd.getAuthors())+"]");
+		logger.info(" ██╔══╝     ██║   ██║      | Description: "+(pd.getDescription().isPresent() ? pd.getDescription().get() : "/"));
+		logger.info(" ██║        ██║   ███████╗ | Plugin Website:"+pd.getUrl().toString());
+		logger.info(" ╚═╝        ╚═╝   ╚══════╝ | Dependencies Plugins: ["+String.join(", ", dependencies)+"]");
         
 		setupIFHAdministration();
 		
@@ -175,7 +175,7 @@ public class FTL
     
     public void setupBstats()
 	{
-    	int pluginId = 0;
+    	int pluginId = 22843;
         metricsFactory.make(this, pluginId);
 	}
 }
