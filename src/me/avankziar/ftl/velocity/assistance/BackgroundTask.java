@@ -39,7 +39,7 @@ public class BackgroundTask
 			{
 				callReplacer(player);
 			}
-		}).repeat(30L, TimeUnit.SECONDS).schedule();
+		}).repeat(plugin.getYamlHandler().getConfig().getLong("TabList.ReplacerRefreshTime", 30L), TimeUnit.SECONDS).schedule();
 	}
 	
 	public static void callReplacer(Player player)
@@ -48,10 +48,12 @@ public class BackgroundTask
 		ArrayList<String> toSend = new ArrayList<>();
 		for(Entry<String, String> entry : map.entrySet())
 		{
+			FTL.getPlugin().getLogger().info("0 callReplacer > "+entry.getKey()+" : "+entry.getValue()); //REMOVEME
 			String s = resolveInternReplacer(player, entry.getKey());
 			if(s != null)
 			{
 				entry.setValue(s);
+				FTL.getPlugin().getLogger().info("1 callReplacer > s : "+s); //REMOVEME
 			} else
 			{
 				toSend.add(entry.getKey());
@@ -79,7 +81,13 @@ public class BackgroundTask
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        player.getCurrentServer().get().sendPluginMessage(FTL.TOBACKEND, streamout.toByteArray());
+        if(player.getCurrentServer().isPresent())
+        {
+        	player.getCurrentServer().get().sendPluginMessage(FTL.TOBACKEND, streamout.toByteArray());
+        } else
+        {
+        	FTL.getPlugin().getLogger().info("sendToResolveReplacer is Empty"); //REMOVEME
+        }
 	}
 	
 	private static String resolveInternReplacer(Player player, String s)
@@ -94,7 +102,7 @@ public class BackgroundTask
 		case "%dates%": return TimeHandler.getDateTime(System.currentTimeMillis(), "dd.MM.yyyy");
 		case "%player_username%": return player.getUsername();
 		case "%player_username_lower%": return player.getUsername().toLowerCase();
-		case "%player_uuid%": return player.getUniqueId().toString();
+		case "%player_useruniqueid%": return player.getUniqueId().toString();
 		case "%player_currentserver%": return player.getCurrentServer().get().getServerInfo().getName();
 		case "%player_clientbrand%": return player.getClientBrand();
 		case "%player_ping%": return String.valueOf(player.getPing());
@@ -142,6 +150,7 @@ public class BackgroundTask
 				return group.getDisplayName();
 			} catch(Exception e)
 			{
+				e.printStackTrace();
 				break;
 			}
 		case "%player_permission_primaryrole_display_color%":
@@ -150,7 +159,13 @@ public class BackgroundTask
 				LuckPerms api = LuckPermsProvider.get();
 				User user = api.getPlayerAdapter(Player.class).getUser(player);
 				Group group = api.getGroupManager().getGroup(user.getPrimaryGroup());
-				return ChatApi.oldBukkitFormat(group.getDisplayName().replace(user.getPrimaryGroup(), ""));
+				String g = String.valueOf(user.getPrimaryGroup().charAt(0)).toUpperCase()+user.getPrimaryGroup().substring(1);
+				String display = group.getDisplayName()
+						.replace(user.getPrimaryGroup(), "")
+						.replace(user.getPrimaryGroup().toLowerCase(), "")
+						.replace(user.getPrimaryGroup().toUpperCase(), "")
+						.replace(g, "");
+				return ChatApi.oldBukkitFormat(display);
 			} catch(Exception e)
 			{
 				break;

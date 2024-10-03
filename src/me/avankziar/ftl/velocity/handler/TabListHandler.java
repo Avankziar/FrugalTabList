@@ -53,14 +53,22 @@ public class TabListHandler
 	public static void determineUsedReplacer()
 	{
 		usedReplacer = new ArrayList<>();
-		for(String s : plugin.getYamlHandler().getConfig().getStringList("TabListListValues"))
+		for(String s : plugin.getYamlHandler().getConfig().getStringList("TabList.ListValues"))
 		{
 			String[] split = s.split(":");
 			if(split.length != 2)
 			{
+				plugin.getLogger().info("Tablist "+s+" dont contain a : !");
 				continue;
 			}
 			String name = split[0];
+			if(plugin.getYamlHandler().getConfig().get(name+".Header") == null
+					|| plugin.getYamlHandler().getConfig().get(name+".Footer") == null
+					|| plugin.getYamlHandler().getConfig().get(name+".PlayerEntry") == null)
+			{
+				plugin.getLogger().info("Tablist "+name+" cannot be loaded!");
+				continue;
+			}
 			for(String t : plugin.getYamlHandler().getConfig().getStringList(name+".Header"))
 			{
 				for(String v : getReplacer(t))
@@ -88,6 +96,7 @@ public class TabListHandler
 					usedReplacer.add(v);
 				}
 			}
+			plugin.getLogger().info("Tablist "+name+" loaded!");
 		}
 	}
 	
@@ -106,17 +115,19 @@ public class TabListHandler
 					char cc = s.charAt(j);
 					if(cc == '%')
 					{
-						String r = s.substring(i, j);
+						String r = s.substring(i, j+1);
 						if(!l.contains(r))
 						{
+							FTL.getPlugin().getLogger().info("getReplacer > i : j : r > "+i+" : "+j+" : "+r); //REMOVEME
 							l.add(r);
+							i = j;
 							break;
 						}
 					}
-					i++;
 					j++;
 				}
 			}
+			i++;
 		}
 		return l;
 	}
@@ -139,6 +150,9 @@ public class TabListHandler
 				}
 			}
 			replacer.put(player.getUniqueId(), map);
+		} else
+		{
+			replacer.put(player.getUniqueId(), new LinkedHashMap<>());
 		}
 		BackgroundTask.callReplacer(player);
 	}
@@ -172,42 +186,50 @@ public class TabListHandler
 				Group group = api.getGroupManager().getGroup(user.getPrimaryGroup());
 				weight = group.getWeight().orElse(0);
 			}
-			TabPlayer tp = new TabPlayer(player.getTabList().getEntry(player.getUniqueId()).get(), weight);
-			tabPlayers.add(tp);
-			for(Player all : FTL.getPlugin().getServer().getAllPlayers())
+			if(player.getTabList().getEntry(player.getUniqueId()).isPresent())
 			{
-				if(!all.getUsername().equals(player.getUsername()))
+				TabPlayer tp = new TabPlayer(player.getTabList().getEntry(player.getUniqueId()).get(), weight);
+				tabPlayers.add(tp);
+				for(Player all : FTL.getPlugin().getServer().getAllPlayers())
 				{
-					continue;
+					if(!all.getUsername().equals(player.getUsername()))
+					{
+						continue;
+					}
+					TabListHandler tll = handler.get(all.getUniqueId());
+					ArrayList<TabPlayer> list = (ArrayList<TabPlayer>) tabPlayers.stream()
+							.filter(x -> x.getTabListEntry().isListed())
+							.collect(Collectors.toList());
+					switch(tll.sortingType)
+					{
+					case ALPHABETICAL_ASC:
+						Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortAlphabetical());
+						break;
+					case ALPHABETICAL_DESC:
+						Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortAlphabetical().reversed());
+						break;
+					case PERMISSION_GROUP_WEIGHT_ASC:
+						Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortPermissionWeight());
+						break;
+					case PERMISSION_GROUP_WEIGHT_DESC:
+						Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortPermissionWeight().reversed());
+						break;
+					}
+					all.getTabList().clearAll();
+					for(TabPlayer t : tabPlayers)
+					{
+						Optional<Player> p = plugin.getServer().getPlayer(t.getTabListEntry().getProfile().getId());
+						TabListEntry tle = t.getTabListEntry();
+						tle.setDisplayName(ChatApi.tl(getPlayerReplacer(p.get(), tll.playerentry)));
+						all.getTabList().addEntry(tle);
+					}
 				}
-				TabListHandler tll = handler.get(all.getUniqueId());
-				ArrayList<TabPlayer> list = (ArrayList<TabPlayer>) tabPlayers.stream().filter(
-						x -> x.getTabListEntry().isListed()).collect(Collectors.toList());
-				switch(tll.sortingType)
-				{
-				case ALPHABETICAL_ASC:
-					Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortAlphabetical());
-					break;
-				case ALPHABETICAL_DESC:
-					Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortAlphabetical().reversed());
-					break;
-				case PERMISSION_GROUP_WEIGHT_ASC:
-					Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortPermissionWeight());
-					break;
-				case PERMISSION_GROUP_WEIGHT_DESC:
-					Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortPermissionWeight().reversed());
-					break;
-				}
-				all.getTabList().clearAll();
-				for(TabPlayer t : tabPlayers)
-				{
-					Optional<Player> p = plugin.getServer().getPlayer(t.getTabListEntry().getProfile().getId());
-					TabListEntry tle = t.getTabListEntry();
-					tle.setDisplayName(ChatApi.tl(getPlayerReplacer(p.get(), tll.playerentry)));
-					all.getTabList().addEntry(tle);
-				}
-			}
-		}).delay(500L, TimeUnit.MILLISECONDS).schedule();
+				task.cancel();
+			} else
+			{
+				FTL.getPlugin().getLogger().info("playerJoins TabListEntry is Empty"); //REMOVEME
+			}			
+		}).delay(500L, TimeUnit.MILLISECONDS).repeat(250L, TimeUnit.MILLISECONDS).schedule();
 	}
 	
 	private static String getPlayerReplacer(Player player, String playerentry)
@@ -342,7 +364,8 @@ public class TabListHandler
 				return;
 			}
 			player.sendPlayerListHeaderAndFooter(
-					ChatApi.tl(header.get(ihe.intValue())), ChatApi.tl(footer.get(ifo.intValue())));
+					ChatApi.tl(getPlayerReplacer(player, header.get(ihe.intValue()))),
+					ChatApi.tl(getPlayerReplacer(player, footer.get(ifo.intValue()))));
 			if(itab.intValue() != 0 || !join)
 			{
 				return;
@@ -369,25 +392,39 @@ public class TabListHandler
 				Arrays.sort(list.toArray(new TabPlayer[list.size()]), new TabPlayerSortPermissionWeight().reversed());
 				break;
 			}
-			player.getTabList().clearAll();
+			//player.getTabList().clearAll();
+			ArrayList<TabListEntry> tleal = new ArrayList<>();
 			for(TabPlayer t : tabPlayers)
 			{
 				Optional<Player> p = plugin.getServer().getPlayer(t.getTabListEntry().getProfile().getId());
-				TabListEntry tle = t.getTabListEntry();
-				tle.setDisplayName(ChatApi.tl(getPlayerReplacer(p.get(), tll.playerentry)));
-				player.getTabList().addEntry(tle);
+				if(p.isPresent())
+				{
+					TabListEntry tl = t.getTabListEntry();
+					tleal.add(TabListEntry.builder()
+							.chatSession(tl.getChatSession())
+							.gameMode(tl.getGameMode())
+							.latency(tl.getLatency())
+							.listed(tl.isListed())
+							.displayName(ChatApi.tl(getPlayerReplacer(p.get(), tll.playerentry)))
+							.build());
+				} else
+				{
+					player.getTabList().removeEntry(t.getTabListEntry().getProfile().getId());
+				}
 			}
+			player.getTabList().clearAll();
+			player.getTabList().addEntries(tleal.toArray(new TabListEntry[tleal.size()]));
 			ihe.addAndGet(1);
 			ifo.addAndGet(1);
 			itab.addAndGet(1);
 			
-		}).delay(200L, TimeUnit.MILLISECONDS).repeat(animationTime, TimeUnit.MILLISECONDS).schedule();
+		}).delay(500L, TimeUnit.MILLISECONDS).repeat(animationTime, TimeUnit.MILLISECONDS).schedule();
 	}
 	
 	private String determineTabList(Player player)
 	{
 		String n = null;
-		for(String s : plugin.getYamlHandler().getConfig().getStringList("TabListListValues"))
+		for(String s : plugin.getYamlHandler().getConfig().getStringList("TabList.ListValues"))
 		{
 			String[] split = s.split(":");
 			if(split.length != 2)
